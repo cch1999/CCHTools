@@ -1,23 +1,23 @@
 Installation
 ============
 
-**my-package** supports Python >= 3.8.
+**cchtools** supports Python >= 3.8.
 
 ## Installing with `pip`
 
-**my-package** is available [on PyPI](https://pypi.org/project/my-package/). Just run
+**cchtools** is available [on PyPI](https://pypi.org/project/cchtools/). Just run
 
 ```bash
-pip install my-package
+pip install cchtools
 ```
 
 ## Installing from source
 
-To install **my-package** from source, first clone [the repository](https://github.com/allenai/python-package-template):
+To install **cchtools** from source, first clone [the repository](https://github.com/cch1999/CCHTools):
 
 ```bash
-git clone https://github.com/allenai/python-package-template.git
-cd python-package-template
+git clone https://github.com/cch1999/CCHTools.git
+cd CCHTools
 ```
 
 Then run
