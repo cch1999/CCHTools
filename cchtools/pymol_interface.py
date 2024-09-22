@@ -5,6 +5,7 @@ import datamol as dm
 import rdkit.Chem as Chem
 from PIL import Image
 from pymol import cmd
+from typing import Union
 
 
 class PyMOLInterface:
@@ -37,6 +38,9 @@ class PyMOLInterface:
 
         Args:
             pdb_code (str): The PDB code of the protein to fetch.
+            show_as (str): The representation style for the protein. Either "cartoon" or "surface". Defaults to "cartoon".
+            color (str): The color to apply to the protein. Defaults to "cyan". 
+            transparency (float): The transparency level of the protein representation. Defaults to 0.5.
         """
         print(f"Fetching protein {pdb_code}")
 
@@ -162,7 +166,7 @@ class PyMOLInterface:
         img = Image.open(BytesIO(img.data))
         return img
 
-    def set_ray_trace_mode(self, mode: str):
+    def set_ray_trace_mode(self, mode: Union[str, int]):
         """
         Sets the ray trace mode for the PyMOL view.
 
@@ -283,7 +287,7 @@ class PyMOLInterface:
             self.cmd.delete(selection_name)
             return unique_interactions
         else:
-            residues = []
+            residues: list[int] = []
             # Get the residue identifiers
             self.cmd.iterate(
                 selection_name, "residues.append(int(resi))", space={"residues": residues}
@@ -297,7 +301,7 @@ class PyMOLInterface:
 if __name__ == "__main__":
     from cchtools.constants import EXAMPLES_PDB, EXAMPLES_SDF
 
-    view = (
+    view = [
         0.328213751,
         0.371481866,
         -0.868490517,
@@ -316,7 +320,7 @@ if __name__ == "__main__":
         -304.886566162,
         375.222930908,
         -20.000000000,
-    )
+    ]
 
     pymol_interface = PyMOLInterface()
     pymol_interface.set_background_color()
