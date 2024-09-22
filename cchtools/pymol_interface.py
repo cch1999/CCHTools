@@ -21,18 +21,19 @@ class PyMOLInterface:
         self.cmd: cmd = cmd
         self.background_color = background_color
 
-
         # set view size
         self.cmd.viewport(*view_size)
 
     def delete_all(self):
         self.cmd.delete("all")
 
-    def fetch_protein(self, pdb_code: str,
-                      show_as: str = "cartoon", # cartoon, surface
-                      color: str = "cyan",
-                      transparency: float = 0.5,
-                      ):
+    def fetch_protein(
+        self,
+        pdb_code: str,
+        show_as: str = "cartoon",  # cartoon, surface
+        color: str = "cyan",
+        transparency: float = 0.5,
+    ):
         """
         Fetches a protein structure by its PDB code and displays it as a cartoon.
 
@@ -50,15 +51,17 @@ class PyMOLInterface:
             self.cmd.show("surface", "all")
         else:
             raise ValueError(f"Invalid show_as value: {show_as}")
-        
+
         self.cmd.color(color, "all")
         self.cmd.set("transparency", transparency, "all")
 
-
-    def load_pdb(self, pdb_path: str,
-                 show_as: str = "cartoon",  # cartoon, surface
-                 color: str = "cyan",
-                 transparency: float = 0.5):
+    def load_pdb(
+        self,
+        pdb_path: str,
+        show_as: str = "cartoon",  # cartoon, surface
+        color: str = "cyan",
+        transparency: float = 0.5,
+    ):
         """
         Loads a protein structure from a PDB file and displays it.
 
@@ -77,10 +80,10 @@ class PyMOLInterface:
             self.cmd.set("cartoon_transparency", transparency, "protein")
         elif show_as == "surface":
             self.cmd.show("surface", "protein")
-            #self.cmd.set("surface_transparency", transparency, "protein")
+            # self.cmd.set("surface_transparency", transparency, "protein")
         else:
             raise ValueError(f"Invalid show_as value: {show_as}")
-        
+
         self.cmd.color(color, "protein")
 
     def set_protein_color(self, color: str):
@@ -111,9 +114,9 @@ class PyMOLInterface:
 
         # Color by element
         if by_element:
-            self.cmd.color(color, 'elem C')
-            self.cmd.color('red', 'elem O')
-            self.cmd.color('blue', 'elem N')
+            self.cmd.color(color, "elem C")
+            self.cmd.color("red", "elem O")
+            self.cmd.color("blue", "elem N")
 
         # remove tmp sdf
         os.remove(sdf_path)
@@ -160,7 +163,7 @@ class PyMOLInterface:
         img = self.display_in_ipython(width, height)
         img = Image.open(BytesIO(img.data))
         return img
-    
+
     def set_ray_trace_mode(self, mode: str):
         """
         Sets the ray trace mode for the PyMOL view.
@@ -178,7 +181,6 @@ class PyMOLInterface:
             filename (str): The path to the file to save the ray trace image to.
         """
         self.cmd.ray(width=width, height=height)
-        
 
     def display_spheres(self, positions, radius=1, color="red"):
         """
@@ -232,8 +234,9 @@ class PyMOLInterface:
         """
         self.cmd.remove("hydrogen")
 
-
-    def get_interacting_residues(self, ligand_name: str = "ligand", distance: float = 4.0, include_details: bool = False):
+    def get_interacting_residues(
+        self, ligand_name: str = "ligand", distance: float = 4.0, include_details: bool = False
+    ):
         """
         Get the protein residues interacting with the ligand within a specified distance.
 
@@ -251,9 +254,11 @@ class PyMOLInterface:
 
         # Select interacting residues, excluding waters and focusing on protein
         selection_name = "interacting_residues"
-        self.cmd.select(selection_name, 
-                        f"(byres (protein and not hetatm) within {distance} of {ligand_name}) and not solvent")
-        
+        self.cmd.select(
+            selection_name,
+            f"(byres (protein and not hetatm) within {distance} of {ligand_name}) and not solvent",
+        )
+
         # Get the number of selected atoms
         n_selected = self.cmd.count_atoms(selection_name)
         print(f"Number of atoms selected: {n_selected}")
@@ -266,7 +271,7 @@ class PyMOLInterface:
                 dist = self.cmd.distance(f"tmp_dist", f"{ligand_name}", f"id {atom.id}")
                 interactions.append((res_info, atom.name, dist))
             self.cmd.delete("tmp_dist")
-            
+
             # Sort by distance and remove duplicates
             interactions.sort(key=lambda x: x[2])
             unique_interactions = []
@@ -275,41 +280,52 @@ class PyMOLInterface:
                 if res not in seen_residues:
                     unique_interactions.append((res, atom, dist))
                     seen_residues.add(res)
-            
+
             # Clean up the selection
             self.cmd.delete(selection_name)
             return unique_interactions
         else:
             residues = []
             # Get the residue identifiers
-            self.cmd.iterate(selection_name, "residues.append(int(resi))", space={'residues': residues})
+            self.cmd.iterate(
+                selection_name, "residues.append(int(resi))", space={"residues": residues}
+            )
 
             # Clean up the selection
             self.cmd.delete(selection_name)
             return residues
 
 
-
 if __name__ == "__main__":
-
     from cchtools.constants import EXAMPLES_PDB, EXAMPLES_SDF
 
-    view = (\
-     0.328213751,    0.371481866,   -0.868490517,\
-     0.564871073,    0.659728706,    0.495660394,\
-     0.757095039,   -0.653266013,    0.006699756,\
-     0.000289902,   -0.000215106,  -35.168968201,\
-   -21.841312408,   18.973146439,  -27.182886124,\
-  -304.886566162,  375.222930908,  -20.000000000 )
-    
-    pymol_interface = PyMOLInterface()
-    pymol_interface.set_background_color()  
-    pymol_interface.load_pdb(EXAMPLES_PDB,
-                             transparency=0.5,
-                             show_as="cartoon")
-    #pymol_interface.display_spheres([(0, 0, 0), (1, 1, 1)], radius=1, color="red")
+    view = (
+        0.328213751,
+        0.371481866,
+        -0.868490517,
+        0.564871073,
+        0.659728706,
+        0.495660394,
+        0.757095039,
+        -0.653266013,
+        0.006699756,
+        0.000289902,
+        -0.000215106,
+        -35.168968201,
+        -21.841312408,
+        18.973146439,
+        -27.182886124,
+        -304.886566162,
+        375.222930908,
+        -20.000000000,
+    )
 
-    #load ligand
+    pymol_interface = PyMOLInterface()
+    pymol_interface.set_background_color()
+    pymol_interface.load_pdb(EXAMPLES_PDB, transparency=0.5, show_as="cartoon")
+    # pymol_interface.display_spheres([(0, 0, 0), (1, 1, 1)], radius=1, color="red")
+
+    # load ligand
     ligand = dm.read_sdf(EXAMPLES_SDF)[0]
     pymol_interface.load_molecule(ligand, color="green")
 
@@ -326,5 +342,5 @@ if __name__ == "__main__":
     # show sidechains
     pymol_interface.show_residue_sidechains(residues)
     pymol_interface.remove_all_hydrogens()
-    #pymol_interface.set_ray_trace_image(width=1000, height=1000)
+    # pymol_interface.set_ray_trace_image(width=1000, height=1000)
     pymol_interface.save_image("spheres.png", dpi=20, width=500, height=500)
