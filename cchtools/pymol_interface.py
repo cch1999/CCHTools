@@ -1,11 +1,11 @@
 import os
 from io import BytesIO
+from typing import Union
 
 import datamol as dm
 import rdkit.Chem as Chem
 from PIL import Image
 from pymol import cmd
-from typing import Union
 
 
 class PyMOLInterface:
