@@ -22,6 +22,7 @@ pyrightconfig.json
 # jupyter notebooks
 
 .ipynb_checkpoints
+notebooks/*
 
 
 # miscellaneous
