@@ -1,9 +1,7 @@
 import os
-import tempfile
 from io import BytesIO
 
 import datamol as dm
-import pandas as pd
 import rdkit.Chem as Chem
 from PIL import Image
 from pymol import cmd
@@ -268,7 +266,7 @@ class PyMOLInterface:
             interactions = []
             for atom in self.cmd.get_model(selection_name).atom:
                 res_info = f"{atom.resn}{atom.resi}"
-                dist = self.cmd.distance(f"tmp_dist", f"{ligand_name}", f"id {atom.id}")
+                dist = self.cmd.distance("tmp_dist", f"{ligand_name}", f"id {atom.id}")
                 interactions.append((res_info, atom.name, dist))
             self.cmd.delete("tmp_dist")
 
