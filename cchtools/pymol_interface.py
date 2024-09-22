@@ -1,4 +1,5 @@
 import os
+import tempfile
 from io import BytesIO
 
 import datamol as dm
@@ -6,7 +7,6 @@ import pandas as pd
 import rdkit.Chem as Chem
 from PIL import Image
 from pymol import cmd
-import tempfile
 
 
 class PyMOLInterface:
