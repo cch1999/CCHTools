@@ -24,6 +24,9 @@ class PyMOLInterface:
         self.cmd.viewport(*view_size)
 
     def delete_all(self):
+        """
+        Deletes all objects in the PyMOL session.
+        """
         self.cmd.delete("all")
 
     def fetch_protein(
@@ -39,7 +42,7 @@ class PyMOLInterface:
         Args:
             pdb_code (str): The PDB code of the protein to fetch.
             show_as (str): The representation style for the protein. Either "cartoon" or "surface". Defaults to "cartoon".
-            color (str): The color to apply to the protein. Defaults to "cyan". 
+            color (str): The color to apply to the protein. Defaults to "cyan".
             transparency (float): The transparency level of the protein representation. Defaults to 0.5.
         """
         print(f"Fetching protein {pdb_code}")
