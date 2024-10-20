@@ -3,11 +3,7 @@ import logging
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from cchtools.utils.cif import (
-    cif_to_rdkit,
-    download_ideal_ccd_structure,
-    fetch_ideal_ccd_structure,
-)
+from cchtools.utils.cif import fetch_ideal_ccd_structure
 
 # Set up basic logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -39,26 +35,3 @@ def fix_bond_orders_with_ccd(mol: Chem.Mol, ccd_code: str, tmp_dir: str = "/tmp"
         return mol  # Return original molecule if bond order transfer failed
 
     return fixed_mol
-
-
-if __name__ == "__main__":
-    # download the ideal structure for HEM
-    cif_path = download_ideal_ccd_structure("HEM")
-    print(f"Downloaded CIF file to {cif_path}")
-
-    # convert to rdkit
-    mol = cif_to_rdkit(cif_path)
-    print(mol)
-
-    # Fetch the ideal structure for HEM
-    mol = fetch_ideal_ccd_structure("HEM")
-    print(mol)
-
-    # corrupt the bond order of HEM by setting all bonds to single
-    for bond in mol.GetBonds():
-        bond.SetBondType(Chem.BondType.SINGLE)
-    print(mol)
-
-    # fix the bond order of HEM
-    mol = fix_bond_orders_with_ccd(mol, "HEM")
-    print(mol)
