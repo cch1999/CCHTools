@@ -1,19 +1,17 @@
-import requests
-from rdkit import Chem
-from rdkit.Chem import AllChem
+import logging
 import os
 from pathlib import Path
 from typing import Optional, Union
 
+import requests
 from pdbeccdutils.core import ccd_reader
-
-import logging
+from rdkit import Chem
 
 # Set up basic logging configuration
 logging.basicConfig(level=logging.INFO)
 
 
-def download_ideal_ccd_structure(ccd_code: str, tmp_dir: str = '/tmp') -> Optional[str]:
+def download_ideal_ccd_structure(ccd_code: str, tmp_dir: str = "/tmp") -> Optional[str]:
     """
     Download the ideal CCD structure for a given component code.
 
@@ -24,21 +22,21 @@ def download_ideal_ccd_structure(ccd_code: str, tmp_dir: str = '/tmp') -> Option
     Returns:
         Optional[str]: Path to the downloaded CIF file, or None if download failed.
     """
-    url = f'https://files.rcsb.org/ligands/download/{ccd_code}.cif'
-    cif_path = os.path.join(tmp_dir, f'{ccd_code}.cif')
+    url = f"https://files.rcsb.org/ligands/download/{ccd_code}.cif"
+    cif_path = os.path.join(tmp_dir, f"{ccd_code}.cif")
 
     # Return existing file if already downloaded
     if os.path.exists(cif_path):
         return cif_path
-    
+
     # Attempt to download the CIF file
     response = requests.get(url)
     if response.status_code != 200:
         logging.error(f"Failed to fetch CIF file for {ccd_code}")
         return None
-    
+
     # Save the downloaded CIF file
-    with open(cif_path, 'w') as f:
+    with open(cif_path, "w") as f:
         f.write(response.text)
     return cif_path
 
@@ -58,7 +56,9 @@ def cif_to_rdkit(cif_path: Union[str, Path], sanitize: bool = True) -> Optional[
     return ccd_component.mol
 
 
-def fetch_ideal_ccd_structure(ccd_code: str, tmp_dir: str = '/tmp', save_structures: bool = True) -> Optional[Chem.Mol]:
+def fetch_ideal_ccd_structure(
+    ccd_code: str, tmp_dir: str = "/tmp", save_structures: bool = True
+) -> Optional[Chem.Mol]:
     """
     Fetch the ideal CCD structure and convert it to an RDKit molecule.
 
@@ -80,7 +80,7 @@ def fetch_ideal_ccd_structure(ccd_code: str, tmp_dir: str = '/tmp', save_structu
         return None
 
     rdkit_mol = cif_to_rdkit(cif_path)
-    
+
     # Remove the CIF file if save_structures is False
     if not save_structures:
         os.remove(cif_path)

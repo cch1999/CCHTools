@@ -1,20 +1,19 @@
-import requests
-import rdkit
+import logging
+
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import os
-from pathlib import Path
-from typing import Optional, Union
 
-from cchtools.utils.cif import download_ideal_ccd_structure, cif_to_rdkit, fetch_ideal_ccd_structure
-
-import logging
+from cchtools.utils.cif import (
+    cif_to_rdkit,
+    download_ideal_ccd_structure,
+    fetch_ideal_ccd_structure,
+)
 
 # Set up basic logging configuration
 logging.basicConfig(level=logging.INFO)
 
 
-def fix_bond_orders_with_ccd(mol: Chem.Mol, ccd_code: str, tmp_dir: str = '/tmp') -> Chem.Mol:
+def fix_bond_orders_with_ccd(mol: Chem.Mol, ccd_code: str, tmp_dir: str = "/tmp") -> Chem.Mol:
     """
     Fix the bond orders of an RDKit molecule using the ideal CCD structure.
 
@@ -26,7 +25,7 @@ def fix_bond_orders_with_ccd(mol: Chem.Mol, ccd_code: str, tmp_dir: str = '/tmp'
     Returns:
         rdkit.Chem.Mol: The molecule with fixed bond orders.
     """
-    
+
     ideal_mol = fetch_ideal_ccd_structure(ccd_code, tmp_dir)
 
     if ideal_mol is None:
@@ -42,11 +41,9 @@ def fix_bond_orders_with_ccd(mol: Chem.Mol, ccd_code: str, tmp_dir: str = '/tmp'
     return fixed_mol
 
 
-
-if __name__ == '__main__':  
-
+if __name__ == "__main__":
     # download the ideal structure for HEM
-    cif_path = download_ideal_ccd_structure('HEM')
+    cif_path = download_ideal_ccd_structure("HEM")
     print(f"Downloaded CIF file to {cif_path}")
 
     # convert to rdkit
@@ -54,7 +51,7 @@ if __name__ == '__main__':
     print(mol)
 
     # Fetch the ideal structure for HEM
-    mol = fetch_ideal_ccd_structure('HEM')
+    mol = fetch_ideal_ccd_structure("HEM")
     print(mol)
 
     # corrupt the bond order of HEM by setting all bonds to single
@@ -63,7 +60,5 @@ if __name__ == '__main__':
     print(mol)
 
     # fix the bond order of HEM
-    mol = fix_bond_orders_with_ccd(mol, 'HEM')
+    mol = fix_bond_orders_with_ccd(mol, "HEM")
     print(mol)
-    
-        
