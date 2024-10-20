@@ -1,11 +1,20 @@
 import os
-
-import datamol as dm
 import pytest
 
-from cchtools.constants import EXAMPLES_PDB, EXAMPLES_SDF
-from cchtools.pymol_interface import PyMOLInterface
+import datamol as dm
 
+from cchtools.constants import EXAMPLES_PDB, EXAMPLES_SDF
+
+# Try to import PyMOL, skip all tests if not available
+pymol_installed = False
+try:
+    from cchtools.pymol_interface import PyMOLInterface
+    pymol_installed = True
+except ImportError:
+    pass
+
+# Skip all tests if PyMOL is not installed
+pytestmark = pytest.mark.skipif(not pymol_installed, reason="PyMOL is not installed")
 
 @pytest.fixture
 def pymol_interface():
