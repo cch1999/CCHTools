@@ -21,7 +21,7 @@ requires-python = ">=3.8"
 dependencies = [
   "rdkit",
   "datamol",
-  "pdbeccdutils=0.8.5"
+  "pdbeccdutils==0.8.5"
 ]
 license = {file = "LICENSE"}
 
