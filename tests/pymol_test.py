@@ -31,7 +31,6 @@ def test_load_molecule(pymol_interface):
 def test_set_protein_color(pymol_interface):
     pymol_interface.load_pdb(EXAMPLES_PDB)
     pymol_interface.set_protein_color("red")
-    color = pymol_interface.cmd.get_color_index("protein")
 
 
 def test_get_interacting_residues(pymol_interface):
