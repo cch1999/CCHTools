@@ -1,7 +1,16 @@
 import logging
+import sys
+import os
 
 from rdkit import Chem
 from rdkit.Chem import AllChem
+
+from rdkit.Chem import Descriptors
+from rdkit import DataStructs
+from rdkit import RDConfig
+sys.path.append(os.path.join(RDConfig.RDContribDir, "SA_Score"))
+import sascorer
+
 
 from cchtools.utils.cif import (
     cif_to_rdkit,
@@ -40,6 +49,51 @@ def fix_bond_orders_with_ccd(mol: Chem.Mol, ccd_code: str, tmp_dir: str = "/tmp"
 
     return fixed_mol
 
+def calculate_basic_metrics(mols: list[Chem.Mol], ref_mol: Chem.Mol | str | None = None) -> list[dict]:
+    """
+    Calculate basic metrics for a list of molecules, optionally comparing to a reference molecule.
+
+    Args:
+        mols (list[Chem.Mol]): List of RDKit molecules to analyze.
+        ref_mol (Chem.Mol | str | None, optional): Reference molecule for similarity comparison.
+            Can be an RDKit molecule, a SMILES string, or None. Defaults to None.
+
+    Returns:
+        list[dict]: List of dictionaries containing metrics for each molecule.
+            Each dictionary contains 'QED', 'SA', and optionally 'Similarity' scores.
+    """
+
+    # Convert reference molecule from SMILES to RDKit Mol object if necessary
+    if isinstance(ref_mol, str):
+        ref_mol = Chem.MolFromSmiles(ref_mol, sanitize=False)
+
+    metrics = []
+    for mol in mols:
+        # Calculate Quantitative Estimate of Drug-likeness (QED)
+        qed = Chem.QED.qed(mol)
+        
+        # Calculate Synthetic Accessibility (SA) score
+        sa = sascorer.calculateScore(mol)
+        
+        # Calculate similarity to reference molecule if provided
+        if ref_mol is not None:
+            sim = DataStructs.TanimotoSimilarity(
+                Chem.RDKFingerprint(mol),
+                Chem.RDKFingerprint(ref_mol)
+            )
+            sim = round(sim, 2)
+        else:
+            sim = None
+
+        # Append calculated metrics to the list
+        metrics.append({
+            'QED': round(qed, 2),
+            'SA': round(sa, 2),
+            'Similarity': sim
+        })
+
+    return metrics
+
 
 if __name__ == "__main__":
     # download the ideal structure for HEM
@@ -62,3 +116,8 @@ if __name__ == "__main__":
     # fix the bond order of HEM
     mol = fix_bond_orders_with_ccd(mol, "HEM")
     print(mol)
+
+    # Test the calculate_basic_metrics function
+    smile = Chem.MolToSmiles(mol)
+    metrics = calculate_basic_metrics([mol, mol], smile)
+    print(metrics)
