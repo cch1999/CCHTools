@@ -1,7 +1,7 @@
 # cchtools
 
 
-### Instal
+### Install
 
 ```bash
 pip install cchtools
