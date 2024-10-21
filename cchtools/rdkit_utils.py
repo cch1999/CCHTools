@@ -8,11 +8,7 @@ from rdkit.Chem import QED, AllChem
 sys.path.append(os.path.join(RDConfig.RDContribDir, "SA_Score"))
 import sascorer
 
-from cchtools.utils.cif import (
-    cif_to_rdkit,
-    download_ideal_ccd_structure,
-    fetch_ideal_ccd_structure,
-)
+from cchtools.utils.cif import fetch_ideal_ccd_structure
 
 # Set up basic logging configuration
 logging.basicConfig(level=logging.INFO)
