@@ -1,8 +1,9 @@
+from typing import Tuple
+
 import datamol as dm
+import numpy as np
 import rdkit.Chem as Chem
 from PIL import Image
-import numpy as np
-from typing import Tuple
 
 
 def open_image(path: str) -> Image.Image:
@@ -12,30 +13,32 @@ def open_image(path: str) -> Image.Image:
     return Image.open(path)
 
 
-def smile_to_image(smile: str, size: Tuple[int, int] = (400, 400), crop: bool = True) -> Image.Image:
+def smile_to_image(
+    smile: str, size: Tuple[int, int] = (400, 400), crop: bool = True
+) -> Image.Image:
     """
     Convert a SMILES string to a cropped image of the molecule with transparent background.
-    
+
     Args:
         smile (str): SMILES representation of the molecule
         size (tuple): Size of the image before cropping (width, height)
         crop (bool): Whether to crop the image to the molecule
-    
+
     Returns:
         PIL.Image.Image: Cropped image of the molecule with transparent background
     """
     # Convert SMILES to RDKit mol object
     mol = dm.to_mol(smile)
-    
+
     # Draw the molecule
     img = Chem.Draw.MolToImage(mol, size=size)
-    
+
     # Convert to RGB mode if not already
-    img = img.convert('RGB')
-    
+    img = img.convert("RGB")
+
     # Convert image to numpy array
     img_array = np.array(img)
-    
+
     # Find non-white pixels
     y, x = np.where(np.any(img_array < 255, axis=2))
 
@@ -46,7 +49,7 @@ def smile_to_image(smile: str, size: Tuple[int, int] = (400, 400), crop: bool = 
         img = img.crop((x.min() - padding, y.min() - padding, x.max() + padding, y.max() + padding))
 
     # Make background transparent
-    img = img.convert('RGBA')
+    img = img.convert("RGBA")
     datas = img.getdata()
 
     new_data = []
@@ -57,19 +60,19 @@ def smile_to_image(smile: str, size: Tuple[int, int] = (400, 400), crop: bool = 
             new_data.append(item)
 
     img.putdata(new_data)
-    
+
     return img
 
 
 if __name__ == "__main__":
     # Example usage:
     smiles = [
-        'CC(=O)NCCC1=CNc2c1cc(OC)cc2CC(=O)NCCc1c[nH]c2ccc(OC)cc12',
-        'CC1=C(C(=O)C[C@@H]1OC(=O)[C@@H]2[C@H](C2(C)C)/C=C(\C)/C(=O)OC)C/C=C\C=C',
-        'OCCc1c(C)[n+](cs1)Cc2cnc(C)nc2N'
+        "CC(=O)NCCC1=CNc2c1cc(OC)cc2CC(=O)NCCc1c[nH]c2ccc(OC)cc12",
+        "CC1=C(C(=O)C[C@@H]1OC(=O)[C@@H]2[C@H](C2(C)C)/C=C(\C)/C(=O)OC)C/C=C\C=C",
+        "OCCc1c(C)[n+](cs1)Cc2cnc(C)nc2N",
     ]
-    
+
     smile_imgs = [smile_to_image(smile) for smile in smiles]
-    
+
     # Display an image (for testing purposes)
     smile_imgs[1].show()

@@ -1,16 +1,12 @@
 import logging
-import sys
 import os
+import sys
 
-from rdkit import Chem
+from rdkit import Chem, DataStructs, RDConfig
 from rdkit.Chem import AllChem
 
-from rdkit.Chem import Descriptors
-from rdkit import DataStructs
-from rdkit import RDConfig
 sys.path.append(os.path.join(RDConfig.RDContribDir, "SA_Score"))
 import sascorer
-
 
 from cchtools.utils.cif import (
     cif_to_rdkit,
@@ -49,7 +45,10 @@ def fix_bond_orders_with_ccd(mol: Chem.Mol, ccd_code: str, tmp_dir: str = "/tmp"
 
     return fixed_mol
 
-def calculate_basic_metrics(mols: list[Chem.Mol], ref_mol: Chem.Mol | str | None = None) -> list[dict]:
+
+def calculate_basic_metrics(
+    mols: list[Chem.Mol], ref_mol: Chem.Mol | str | None = None
+) -> list[dict]:
     """
     Calculate basic metrics for a list of molecules, optionally comparing to a reference molecule.
 
@@ -71,26 +70,21 @@ def calculate_basic_metrics(mols: list[Chem.Mol], ref_mol: Chem.Mol | str | None
     for mol in mols:
         # Calculate Quantitative Estimate of Drug-likeness (QED)
         qed = Chem.QED.qed(mol)
-        
+
         # Calculate Synthetic Accessibility (SA) score
         sa = sascorer.calculateScore(mol)
-        
+
         # Calculate similarity to reference molecule if provided
         if ref_mol is not None:
             sim = DataStructs.TanimotoSimilarity(
-                Chem.RDKFingerprint(mol),
-                Chem.RDKFingerprint(ref_mol)
+                Chem.RDKFingerprint(mol), Chem.RDKFingerprint(ref_mol)
             )
             sim = round(sim, 2)
         else:
             sim = None
 
         # Append calculated metrics to the list
-        metrics.append({
-            'QED': round(qed, 2),
-            'SA': round(sa, 2),
-            'Similarity': sim
-        })
+        metrics.append({"QED": round(qed, 2), "SA": round(sa, 2), "Similarity": sim})
 
     return metrics
 
