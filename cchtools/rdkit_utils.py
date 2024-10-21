@@ -88,6 +88,7 @@ def calculate_basic_metrics(
 if __name__ == "__main__":
     # download the ideal structure for HEM
     from typing import Optional
+    from cchtools.utils.cif import download_ideal_ccd_structure, cif_to_rdkit
 
     cif_path: Optional[str] = download_ideal_ccd_structure("HEM")
     if cif_path is not None:
