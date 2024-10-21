@@ -3,7 +3,7 @@ import os
 import sys
 
 from rdkit import Chem, DataStructs, RDConfig
-from rdkit.Chem import AllChem
+from rdkit.Chem import QED, AllChem
 
 sys.path.append(os.path.join(RDConfig.RDContribDir, "SA_Score"))
 import sascorer
@@ -69,7 +69,7 @@ def calculate_basic_metrics(
     metrics = []
     for mol in mols:
         # Calculate Quantitative Estimate of Drug-likeness (QED)
-        qed = Chem.QED.qed(mol)
+        qed = QED.qed(mol)
 
         # Calculate Synthetic Accessibility (SA) score
         sa = sascorer.calculateScore(mol)
@@ -91,21 +91,28 @@ def calculate_basic_metrics(
 
 if __name__ == "__main__":
     # download the ideal structure for HEM
-    cif_path = download_ideal_ccd_structure("HEM")
-    print(f"Downloaded CIF file to {cif_path}")
+    from typing import Optional
+
+    cif_path: Optional[str] = download_ideal_ccd_structure("HEM")
+    if cif_path is not None:
+        print(f"Downloaded CIF file to {cif_path}")
 
     # convert to rdkit
-    mol = cif_to_rdkit(cif_path)
-    print(mol)
+    if cif_path is not None:
+        mol = cif_to_rdkit(cif_path)
+        print(mol)
 
     # Fetch the ideal structure for HEM
     mol = fetch_ideal_ccd_structure("HEM")
     print(mol)
 
     # corrupt the bond order of HEM by setting all bonds to single
-    for bond in mol.GetBonds():
-        bond.SetBondType(Chem.BondType.SINGLE)
-    print(mol)
+    if mol is not None:
+        for bond in mol.GetBonds():
+            bond.SetBondType(Chem.BondType.SINGLE)
+        print(mol)
+    else:
+        print("Warning: mol is None, skipping bond processing")
 
     # fix the bond order of HEM
     mol = fix_bond_orders_with_ccd(mol, "HEM")
