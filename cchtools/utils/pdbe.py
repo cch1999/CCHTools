@@ -34,15 +34,15 @@ def get_pdbs_with_compound(hetcode: str) -> List[str]:
 
 
 def get_compound_atoms(hetcode: str) -> List[Dict[str, Any]]:
-    """Get atom information for a specific compound from the PDBe Knowledge Graph API.
+    """Get atom information for a chemical component.
 
     Args:
-        hetcode: The hetcode/compound ID from the PDB Chemical Component Dictionary
+        hetcode: The PDB chemical component code
 
     Returns:
-        List of dictionaries containing atom information including:
-        - stereo: R/S stereochemistry for atoms (or E/Z for bonds) when applicable
-        - leaving_atom: Flag indicating if this is a leaving atom
+        List of dictionaries containing atom information with fields:
+        - stereo: Whether the atom is a stereocenter
+        - leaving_atom: Whether the atom can leave during reactions
         - pdb_name: Alternate name of the atom
         - aromatic: Whether the atom is within an aromatic substructure
         - element: Element type of the atom
@@ -52,19 +52,10 @@ def get_compound_atoms(hetcode: str) -> List[Dict[str, Any]]:
 
     Example:
         >>> atoms = get_compound_atoms("ADP")
-        >>> atoms[0]
-            {
-        'stereo': False,
-        'leaving_atom': False,
-        'pdb_name': 'C13',
-        'aromatic': True,
-        'element': 'C',
-        'ideal_y': 0.0,
-        'ideal_x': 0.296,
-        'charge': 0.0,
-        'ideal_z': -4.67,
-            'atom_name': 'C13'
-        }
+        >>> sorted(atoms[0].keys())  # Show fields in a stable order
+        ['aromatic', 'atom_name', 'charge', 'element', 'ideal_x', 'ideal_y', 'ideal_z', 'leaving_atom', 'pdb_name', 'stereo']
+        >>> all(isinstance(x, bool) for x in [atoms[0]['stereo'], atoms[0]['leaving_atom'], atoms[0]['aromatic']])
+        True
     """
     url = f"https://www.ebi.ac.uk/pdbe/graph-api/compound/atoms/{hetcode}"
     response = _url_to_json(url)
