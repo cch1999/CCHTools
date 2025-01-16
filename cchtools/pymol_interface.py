@@ -292,9 +292,7 @@ class PyMOLInterface:
         else:
             residues: list[int] = []
             # Get the residue identifiers
-            self.cmd.iterate(
-                selection_name, "residues.append(int(resi))", space={"residues": residues}
-            )
+            self.cmd.iterate(selection_name, "residues.append(int(resi))", space={"residues": residues})
 
             # Clean up the selection
             self.cmd.delete(selection_name)
