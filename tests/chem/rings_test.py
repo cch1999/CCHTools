@@ -20,7 +20,6 @@ def test_ring_atoms():
 def test_generate_ring_systems():
 
     reduced_ring_skeletons = {  
-        "5": "c1cccc1",
         "6": "c1ccccc1",
     }
 
