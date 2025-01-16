@@ -5,7 +5,6 @@ from cchtools.chem.rings import generate_ring_systems
 from cchtools.data.constants import RING_ATOMS, RING_SKELETONS
 
 
-
 def test_generate_ring_systems():
     reduced_ring_skeletons = {
         "6": "c1ccccc1",
