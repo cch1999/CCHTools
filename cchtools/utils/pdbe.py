@@ -5,8 +5,11 @@ from typing import Dict, Any, List
 
 def _url_to_json(url: str) -> Dict[str, Any]:
     response = requests.get(url)
-    if response.status_code == 404:
-        raise ValueError(f"Query at {url} not found in the PDBe Knowledge Graph API.")
+    # TODO: This is removed because the API returns 404 for real CCDs that have 0 annotations
+    # This is a problem because it makes it difficult to check if a hetcode is in the CCD
+    # Only solution is to check if the hetcode is in the CCD before querying the API?
+    #if response.status_code == 404:
+    #    raise ValueError(f"Query at {url} not found in the PDBe Knowledge Graph API.")
     return response.json()
 
 def get_pdbs_with_compound(hetcode: str) -> List[str]:
