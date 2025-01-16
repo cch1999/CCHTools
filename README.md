@@ -1,4 +1,4 @@
-# cchtools
+# cchtools - A personal collection of random molecule and protein functions you probably should not use
 
 [![Documentation Status](https://readthedocs.org/projects/cchtools/badge/?version=latest)](https://cchtools.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://github.com/cch1999/CCHTools/actions/workflows/tests.yml/badge.svg)](https://github.com/cch1999/CCHTools/actions/workflows/tests.yml)
