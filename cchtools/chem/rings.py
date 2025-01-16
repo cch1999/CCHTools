@@ -1,9 +1,8 @@
 from itertools import product
-from typing import Dict, List
+from typing import Dict
 
 import pandas as pd
 from rdkit import Chem
-from rdkit.Chem import AllChem
 from tqdm import tqdm
 
 from cchtools.data.constants import RING_ATOMS, RING_SKELETONS
