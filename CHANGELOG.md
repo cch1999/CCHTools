@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v0.3.1](https://github.com/cch1999/CCHTools/releases/tag/v0.3.1) - 2025-01-16
+
+- Added PDBe API functions for compounds
+
 ## [v0.2.1](https://github.com/cch1999/CCHTools/releases/tag/v0.2.1) - 2024-10-20
 
 ## [v0.1.0](https://github.com/cch1999/CCHTools/releases/tag/v0.1.0) - 2024-09-22
