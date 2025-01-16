@@ -1,23 +1,26 @@
 """Functions to interacting with the PDBe Knowledge Graph API."""
 
+from typing import Any, Dict, List
+
 import requests
-from typing import Dict, Any, List
+
 
 def _url_to_json(url: str) -> Dict[str, Any]:
     response = requests.get(url)
     # TODO: This is removed because the API returns 404 for real CCDs that have 0 annotations
     # This is a problem because it makes it difficult to check if a hetcode is in the CCD
     # Only solution is to check if the hetcode is in the CCD before querying the API?
-    #if response.status_code == 404:
+    # if response.status_code == 404:
     #    raise ValueError(f"Query at {url} not found in the PDBe Knowledge Graph API.")
     return response.json()
 
+
 def get_pdbs_with_compound(hetcode: str) -> List[str]:
     """Get PDB entries containing a specific compound from the PDBe Knowledge Graph API.
-    
+
     Args:
         hetcode: The hetcode/compound ID from the PDB Chemical Component Dictionary
-        
+
     Returns:
         List of PDB entry IDs that contain the specified compound
 
@@ -32,10 +35,10 @@ def get_pdbs_with_compound(hetcode: str) -> List[str]:
 
 def get_compound_atoms(hetcode: str) -> List[Dict[str, Any]]:
     """Get atom information for a specific compound from the PDBe Knowledge Graph API.
-    
+
     Args:
         hetcode: The hetcode/compound ID from the PDB Chemical Component Dictionary
-        
+
     Returns:
         List of dictionaries containing atom information including:
         - stereo: R/S stereochemistry for atoms (or E/Z for bonds) when applicable
@@ -70,15 +73,15 @@ def get_compound_atoms(hetcode: str) -> List[Dict[str, Any]]:
 
 def get_compound_bonds(hetcode: str) -> List[Dict[str, Any]]:
     """Get bond information for a specific compound from the PDBe Knowledge Graph API.
-    
+
     Args:
         hetcode: The hetcode/compound ID from the PDB Chemical Component Dictionary
-        
+
     Returns:
         List of dictionaries containing bond information including:
         - stereo: R/S stereochemistry for atoms (or E/Z for bonds) when applicable
         - atom_1: Name of first atom in the bond
-        - atom_2: Name of second atom in the bond  
+        - atom_2: Name of second atom in the bond
         - bond_type: String describing bond type (e.g. 'sing', 'doub')
         - bond_order: Integer describing bond order
         - ideal_length: Target length of the bond
@@ -90,7 +93,7 @@ def get_compound_bonds(hetcode: str) -> List[Dict[str, Any]]:
         {
             'stereo': False,
             'atom_1': "C1'",
-            'atom_2': "H1'", 
+            'atom_2': "H1'",
             'bond_type': 'sing',
             'bond_order': 1,
             'ideal_length': 1.09,
@@ -101,15 +104,16 @@ def get_compound_bonds(hetcode: str) -> List[Dict[str, Any]]:
     response = _url_to_json(url)
     return response.get(hetcode, [])
 
+
 def get_similar_hetcodes(hetcode: str) -> List[Dict[str, Any]]:
     """Get similar compounds to a specific hetcode from the PDBe Knowledge Graph API.
 
     NOTE: Returns hetcodes that share functional annotations with the query hetcode.
 
-    
+
     Args:
         hetcode: The hetcode/compound ID from the PDB Chemical Component Dictionary
-        
+
     Returns:
         List of dictionaries containing similar compound information including:
         - acts_as: Role of the compound (e.g. 'cofactor', 'reactant')
@@ -135,6 +139,7 @@ def get_similar_hetcodes(hetcode: str) -> List[Dict[str, Any]]:
     response = _url_to_json(url)
     return response.get(hetcode, [])
 
+
 def get_similar_ligands(hetcode: str) -> List[Dict[str, Any]]:
     """Get structurally similar ligands to a specific hetcode from the PDBe Knowledge Graph API.
 
@@ -145,7 +150,7 @@ def get_similar_ligands(hetcode: str) -> List[Dict[str, Any]]:
 
     Args:
         hetcode: The hetcode/compound ID from the PDB Chemical Component Dictionary
-        
+
     Returns:
         List of dictionaries containing similar compound information including:
         - stereoisomers: List of stereoisomer hetcode objects
@@ -179,7 +184,7 @@ def get_compound_substructures(hetcode: str) -> List[Dict[str, Any]]:
 
     Args:
         hetcode: The hetcode/compound ID from the PDB Chemical Component Dictionary
-        
+
     Returns:
         List of dictionaries containing substructure information including:
         - fragments: Dictionary mapping fragment names to lists of atom names
@@ -195,6 +200,7 @@ def get_compound_substructures(hetcode: str) -> List[Dict[str, Any]]:
     url = f"https://www.ebi.ac.uk/pdbe/graph-api/compound/substructures/{hetcode}"
     response = _url_to_json(url)
     return response.get(hetcode, [])
+
 
 def get_compound_summary(hetcode: str) -> List[Dict[str, Any]]:
     """Get summary information for a specific hetcode from the PDBe Knowledge Graph API.
@@ -227,6 +233,7 @@ def get_compound_summary(hetcode: str) -> List[Dict[str, Any]]:
     response = _url_to_json(url)
     return response.get(hetcode, [])
 
+
 def get_cofactor_summary() -> Dict[str, List[Dict[str, List[str]]]]:
     """Get summary information about all cofactor annotations in the PDB.
 
@@ -245,7 +252,7 @@ def get_cofactor_summary() -> Dict[str, List[Dict[str, List[str]]]]:
         >>> cofactors["Coenzyme M"][0]["cofactors"]
         ['COM']
     """
-    url = f"https://www.ebi.ac.uk/pdbe/graph-api/compound/cofactors/"
+    url = "https://www.ebi.ac.uk/pdbe/graph-api/compound/cofactors/"
     response = _url_to_json(url)
     return response
 
@@ -254,15 +261,11 @@ if __name__ == "__main__":
     from rich import print
 
     # #### COMPOUNDS
-
     # print(get_pdbs_with_compound("3IP"))
-
     # atoms = get_compound_atoms("3IP")
     # print(atoms[:2])
-
     # bonds = get_compound_bonds("3IP")
     # print(bonds[:5])
-
     # similar = get_similar_hetcodes("TDP")
     # print(similar)
 
