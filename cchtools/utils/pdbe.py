@@ -77,19 +77,6 @@ def get_compound_bonds(hetcode: str) -> List[Dict[str, Any]]:
         - bond_order: Integer describing bond order
         - ideal_length: Target length of the bond
         - aromatic: Whether the bond is within an aromatic substructure
-
-    Example:
-        >>> bonds = get_compound_bonds("ADP")
-        >>> bonds[0]
-        {
-            'stereo': False,
-            'atom_1': "C1'",
-            'atom_2': "H1'",
-            'bond_type': 'sing',
-            'bond_order': 1,
-            'ideal_length': 1.09,
-            'aromatic': False
-        }
     """
     url = f"https://www.ebi.ac.uk/pdbe/graph-api/compound/bonds/{hetcode}"
     response = _url_to_json(url)
@@ -110,21 +97,6 @@ def get_similar_hetcodes(hetcode: str) -> List[Dict[str, Any]]:
         - acts_as: Role of the compound (e.g. 'cofactor', 'reactant')
         - class: Classification of the compound group
         - chem_comp_ids: List of similar compounds with their hetcodes and names
-
-    Example:
-        >>> similar = get_similar_compounds("TDP")
-        >>> similar[0]
-        {
-            'acts_as': 'cofactor',
-            'class': 'Thiamine diphosphate',
-            'chem_comp_ids': [
-                {
-                    'chem_comp_id': 'WWF',
-                    'name': 'C2-1-HYDROXY-3-METHYL-BUTYL-THIAMIN'
-                },
-                ...
-            ]
-        }
     """
     url = f"https://www.ebi.ac.uk/pdbe/graph-api/compound/cofactors/het/{hetcode}"
     response = _url_to_json(url)
@@ -152,16 +124,6 @@ def get_similar_ligands(hetcode: str) -> List[Dict[str, Any]]:
         - name: Chemical name
         - similarity_score: PARITY similarity score (0-1)
         - substructure_match: List of matching atom names
-
-    Example:
-        >>> similar = get_similar_ligands("STI")
-        >>> similar[0]["same_scaffold"][0]
-        {
-            'chem_comp_id': 'MPZ',
-            'name': '4-[(4-METHYLPIPERAZIN-1-YL)METHYL]-N-{3-[(4-PYRIDIN-3-YLPYRIMIDIN-2-YL)AMINO]PHENYL}BENZAMIDE',
-            'substructure_match': ['O16', 'C33', 'N34'],
-            'similarity_score': 0.973
-        }
     """
     url = f"https://www.ebi.ac.uk/pdbe/graph-api/compound/similarity/{hetcode}"
     response = _url_to_json(url)
@@ -212,13 +174,6 @@ def get_compound_summary(hetcode: str) -> List[Dict[str, Any]]:
         - cross_links: External database references
         - synonyms: Alternative names
         - phys_chem_properties: Physical and chemical properties
-
-    Example:
-        >>> summary = get_compound_summary("ATP")
-        >>> summary[0]["name"]
-        'ADENOSINE-5\'-TRIPHOSPHATE'
-        >>> summary[0]["formula"]
-        'C10 H16 N5 O13 P3'
     """
     url = f"https://www.ebi.ac.uk/pdbe/graph-api/compound/summary/{hetcode}"
     response = _url_to_json(url)
