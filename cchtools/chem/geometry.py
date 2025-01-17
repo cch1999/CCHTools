@@ -29,8 +29,7 @@ def get_center_of_mass(mol: Chem.Mol) -> np.ndarray:
         Array of shape (3,) containing XYZ coordinates of center of mass
     """
     coords = get_coords(mol)
-    atomic_masses = np.array([atom.GetMass() for atom in mol.GetAtoms()])
-    center_of_mass = np.average(coords, weights=atomic_masses, axis=0)
+    center_of_mass = np.mean(coords, axis=0)
     return center_of_mass
 
 
