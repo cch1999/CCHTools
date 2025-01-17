@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 from rdkit import Chem
 
 import cchtools.chem.geometry as geometry
@@ -8,8 +8,14 @@ import cchtools.chem.geometry as geometry
 @pytest.fixture(scope="module")
 def test_smiles():
     """Fixture providing test SMILES strings."""
-    return ["C", "CC(=O)O", "c1ccccc1", "C1CCCCC1",
-            "CN1C=NC2=C1C(=O)N(C(=O)N2C)C", "CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C"]
+    return [
+        "C",
+        "CC(=O)O",
+        "c1ccccc1",
+        "C1CCCCC1",
+        "CN1C=NC2=C1C(=O)N(C(=O)N2C)C",
+        "CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C",
+    ]
 
 
 @pytest.fixture(scope="module")

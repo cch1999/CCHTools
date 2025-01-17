@@ -1,7 +1,8 @@
+from typing import Optional
+
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from typing import List, Optional
 
 
 def get_coords(mol: Chem.Mol) -> np.ndarray:
@@ -52,5 +53,5 @@ def generate_conformer(mol: Chem.Mol, n_conformers: int = 1) -> Optional[Chem.Mo
         mol = Chem.RemoveHs(mol)
     except ValueError:
         return None
-    
+
     return mol
