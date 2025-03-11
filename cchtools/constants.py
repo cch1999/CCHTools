@@ -1,5 +1,7 @@
 import os
 
+PROJECT_NAME = "cchtools"
+
 # Get the project directory
 PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -8,3 +10,6 @@ EXAMPLES_DIR = os.path.join(PROJECT_DIR, "examples")
 EXAMPLES_PDB = os.path.join(EXAMPLES_DIR, "6w63.pdb")
 EXAMPLES_SDF = os.path.join(EXAMPLES_DIR, "6w63_ref_ligand.sdf")
 EXAMPLES_CIF = os.path.join(EXAMPLES_DIR, "HEM.cif")
+
+_REACTION_PATH = os.path.join(PROJECT_DIR, f"{PROJECT_NAME}/data/reactions/hb.txt")
+HB_REACTIONS = [line.strip() for line in open(_REACTION_PATH, "r")]
