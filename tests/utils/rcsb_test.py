@@ -73,21 +73,6 @@ class TestRcsbPdbClusters:
             mock_obsolete.return_value = None
             assert clusters.get_seqclust("9999", chain_id="Z") is None
 
-    # @patch("cchtools.utils.rcsb.pdb_check_obsolete")
-    # @patch("cchtools.utils.rcsb.match_pdb_chain_to_entity")
-    # def test_get_seqclust_obsolete(self, mock_match, mock_obsolete, clusters):
-    #     """Test getting sequence cluster for obsolete PDB"""
-    #     mock_match.return_value = "A"
-    #     mock_obsolete.return_value = "1ABC"
-
-    #     # Set up clusters
-    #     clusters.clusters["1ABC_A"] = 42
-
-    #     # Test obsolete PDB redirects to existing one
-    #     result = clusters.get_seqclust("9999", chain_id="X", check_obsolete=True)
-    #     assert result == 42
-    #     mock_obsolete.assert_called_with("9999")
-
     def test_get_pdbs_in_cluster(self, clusters):
         """Test getting all PDBs in a cluster"""
         # Set up clusters
