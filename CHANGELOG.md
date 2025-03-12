@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.5.1](https://github.com/cch1999/CCHTools/releases/tag/v0.5.1) - 2025-03-12
 
+- Added `RcsbPdbClusters` clusters functionality
+
 ## [v0.4.1](https://github.com/cch1999/CCHTools/releases/tag/v0.4.1) - 2025-01-17
 
 - Add geometry functions for RDKit molecules
