@@ -61,7 +61,7 @@ class RcsbPdbClusters:
         entity_id: Optional[str] = None,
         chain_id: Optional[str] = None,
         check_obsolete: bool = True,
-    ) -> Optional[str]:
+    ) -> Optional[int]:
         """Get sequence cluster ID for a pdb_code chain using RCSB mmseq2/blastclust predefined clusters
 
         When `check_obsolete` is True, the function will check if the PDB code is obsolete and if so, will return the cluster ID for the superceding PDB code.
@@ -73,7 +73,7 @@ class RcsbPdbClusters:
             check_obsolete (bool): Check if PDB code is obsolete
 
         Returns:
-            str: Cluster ID as a string
+            int: Cluster ID as an integer
             None: If unable to match to entity_id or chain_id
         """
 
@@ -102,13 +102,13 @@ class RcsbPdbClusters:
         if seqclust == "None":
             logging.info(f"unable to assign cluster to {pdb_code}{chain_id}")
             return None
-        return str(seqclust)
+        return int(seqclust)
 
     def get_pdbs_in_cluster(self, cluster_id: Union[str, int], include_alphafold: bool = False) -> List[str]:
         """Get all PDBs in a given cluster"""
-        if isinstance(cluster_id, int):
-            cluster_id = str(cluster_id)
-        pdb_ids = [pdb for pdb, id in self.clusters.items() if str(id) == cluster_id]
+        if isinstance(cluster_id, str):
+            cluster_id = int(cluster_id)
+        pdb_ids = [pdb for pdb, id in self.clusters.items() if id == cluster_id]
         if not include_alphafold:
             pdb_ids = [pdb for pdb in pdb_ids if not pdb.startswith("AF_")]
         return pdb_ids
@@ -172,6 +172,7 @@ if __name__ == "__main__":
     clusters = RcsbPdbClusters(identity=100)
     cluster_id = clusters.get_seqclust("6QR8", chain_id="A")
     print(cluster_id)
-    pdbs = clusters.get_pdbs_in_cluster(str(cluster_id))
+    cluster_id = 1
+    pdbs = clusters.get_pdbs_in_cluster(cluster_id)
     print(pdbs)
     print(len(pdbs))

@@ -71,7 +71,7 @@ class TestRcsbPdbClusters:
         # Mock the API response for non-existent PDB
         with patch("cchtools.utils.rcsb.pdb_check_obsolete") as mock_obsolete:
             mock_obsolete.return_value = None
-            assert clusters.get_seqclust("9999", chain_id="Z") == "None"
+            assert clusters.get_seqclust("9999", chain_id="Z") == None
 
     # @patch("cchtools.utils.rcsb.pdb_check_obsolete")
     # @patch("cchtools.utils.rcsb.match_pdb_chain_to_entity")
