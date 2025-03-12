@@ -22,7 +22,7 @@ class RcsbPdbClusters:
         """
         self.cluster_dir = cluster_dir
         self.identity = identity
-        self.clusters = {}
+        self.clusters: dict[str, int] = {}
         self._fetch_cluster_file()
 
     def _download_cluster_sets(self, cluster_file_path: str):
@@ -57,10 +57,10 @@ class RcsbPdbClusters:
     def get_seqclust(
         self,
         pdb_code: str,
-        entity_id: str = None,
-        chain_id: str = None,
+        entity_id: str | None = None,
+        chain_id: str | None = None,
         check_obsolete: bool = True,
-    ) -> int:
+    ) -> str | None:
         """Get sequence cluster ID for a pdb_code chain using RCSB mmseq2/blastclust predefined clusters
 
         When `check_obsolete` is True, the function will check if the PDB code is obsolete and if so, will return the cluster ID for the superceding PDB code.
@@ -70,6 +70,10 @@ class RcsbPdbClusters:
             entity_id (str): Entity ID
             chain_id (str): Chain ID
             check_obsolete (bool): Check if PDB code is obsolete
+
+        Returns:
+            int: Cluster ID
+            None: If unable to match to entity_id or chain_id
         """
 
         if entity_id and chain_id:
@@ -98,8 +102,10 @@ class RcsbPdbClusters:
             logging.info(f"unable to assign cluster to {pdb_code}{chain_id}")
         return seqclust
 
-    def get_pdbs_in_cluster(self, cluster_id: str, include_alphafold: bool = False):
+    def get_pdbs_in_cluster(self, cluster_id: str | int, include_alphafold: bool = False):
         """Get all PDBs in a given cluster"""
+        if isinstance(cluster_id, int):
+            cluster_id = str(cluster_id)
         pdb_ids = [pdb for pdb, id in self.clusters.items() if id == cluster_id]
         if not include_alphafold:
             pdb_ids = [pdb for pdb in pdb_ids if not pdb.startswith("AF_")]
