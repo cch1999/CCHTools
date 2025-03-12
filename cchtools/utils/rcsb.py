@@ -2,6 +2,7 @@ import logging
 import os
 import urllib.request as request
 from functools import lru_cache
+from typing import List, Optional
 
 import requests
 
@@ -57,10 +58,10 @@ class RcsbPdbClusters:
     def get_seqclust(
         self,
         pdb_code: str,
-        entity_id: str | None = None,
-        chain_id: str | None = None,
+        entity_id: Optional[str] = None,
+        chain_id: Optional[str] = None,
         check_obsolete: bool = True,
-    ) -> str | None:
+    ) -> Optional[str]:
         """Get sequence cluster ID for a pdb_code chain using RCSB mmseq2/blastclust predefined clusters
 
         When `check_obsolete` is True, the function will check if the PDB code is obsolete and if so, will return the cluster ID for the superceding PDB code.
@@ -72,7 +73,7 @@ class RcsbPdbClusters:
             check_obsolete (bool): Check if PDB code is obsolete
 
         Returns:
-            int: Cluster ID
+            str: Cluster ID as a string
             None: If unable to match to entity_id or chain_id
         """
 
@@ -96,24 +97,25 @@ class RcsbPdbClusters:
                     f"Assigning cluster for obsolete entry via superceding: {pdb_code}->{superceded} {chain_id}"
                 )
                 return self.get_seqclust(
-                    superceded, chain_id, check_obsolete=False
+                    superceded, chain_id=chain_id, check_obsolete=False
                 )  # assumes chain is same in superceding entry
         if seqclust == "None":
             logging.info(f"unable to assign cluster to {pdb_code}{chain_id}")
-        return seqclust
+            return None
+        return str(seqclust)
 
-    def get_pdbs_in_cluster(self, cluster_id: str | int, include_alphafold: bool = False):
+    def get_pdbs_in_cluster(self, cluster_id: str | int, include_alphafold: bool = False) -> List[str]:
         """Get all PDBs in a given cluster"""
         if isinstance(cluster_id, int):
             cluster_id = str(cluster_id)
-        pdb_ids = [pdb for pdb, id in self.clusters.items() if id == cluster_id]
+        pdb_ids = [pdb for pdb, id in self.clusters.items() if str(id) == cluster_id]
         if not include_alphafold:
             pdb_ids = [pdb for pdb in pdb_ids if not pdb.startswith("AF_")]
         return pdb_ids
 
 
 @lru_cache()
-def pdb_check_obsolete(pdb_code):
+def pdb_check_obsolete(pdb_code: str) -> Optional[str]:
     """Check the status of a pdb, if it is obsolete return the superceding PDB ID else return None"""
     pdb_code = pdb_code.lower()
 
@@ -146,7 +148,7 @@ def get_pdb_entities(pdb_code: str):
 
 
 @lru_cache()
-def match_pdb_chain_to_entity(pdb_code: str, chain_id: str):
+def match_pdb_chain_to_entity(pdb_code: str, chain_id: str) -> Optional[str]:
     """
     Tries to match a PDB file chain ID to an macromolecular entitiy, else returns None.
     See https://www.rcsb.org/docs/general-help/identifiers-in-pdb
@@ -170,6 +172,6 @@ if __name__ == "__main__":
     clusters = RcsbPdbClusters(identity=100)
     cluster_id = clusters.get_seqclust("6QR8", chain_id="A")
     print(cluster_id)
-    pdbs = clusters.get_pdbs_in_cluster(cluster_id)
+    pdbs = clusters.get_pdbs_in_cluster(str(cluster_id))
     print(pdbs)
     print(len(pdbs))
