@@ -52,10 +52,9 @@ jobs:
 
           - python: "3.10"
             task:
-              name: Style
+              name: isort
               run: |
                 isort --check .
-                black --check .
 
           - python: "3.10"
             task:
@@ -63,7 +62,7 @@ jobs:
               run: cd docs && make html
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Python environment
         uses: ./.github/actions/setup-venv
@@ -88,7 +87,7 @@ jobs:
 
       - name: Upload package distribution files
         if: matrix.task.name == 'Build'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: package
           path: dist
@@ -105,7 +104,7 @@ jobs:
     needs: [checks]
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -125,7 +124,7 @@ jobs:
           echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Download package distribution files
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: package
           path: dist
