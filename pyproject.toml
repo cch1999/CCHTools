@@ -22,6 +22,7 @@ dependencies = [
   "rdkit",
   "datamol",
   "pdbeccdutils"
+  "requests"
 ]
 license = {file = "LICENSE"}
 
