@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 class RcsbPdbClusters:
-    def __init__(self, identity: int = 30, cluster_dir: str = os.path.expanduser("~/.cache/cchtools")):
+    def __init__(
+        self, identity: int = 30, cluster_dir: str = os.path.expanduser("~/.cache/cchtools")
+    ):
         """
         Class for fetching sequence cluster IDs for a given PDB code and chain ID
         using RCSB mmseq2/blastclust predefined clusters.
@@ -104,7 +106,9 @@ class RcsbPdbClusters:
             return None
         return int(seqclust)
 
-    def get_pdbs_in_cluster(self, cluster_id: Union[str, int], include_alphafold: bool = False) -> List[str]:
+    def get_pdbs_in_cluster(
+        self, cluster_id: Union[str, int], include_alphafold: bool = False
+    ) -> List[str]:
         """Get all PDBs in a given cluster"""
         if isinstance(cluster_id, str):
             cluster_id = int(cluster_id)
