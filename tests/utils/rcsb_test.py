@@ -39,6 +39,8 @@ class TestRcsbPdbClusters:
 
         clusters = RcsbPdbClusters(identity=30, cluster_dir=tmp_path)
 
+        assert clusters.clusters["12E8_1"] == 0
+
         # Verify the cluster file was created
         cluster_file = os.path.join(tmp_path, "pdb_clusters_30.out")
         assert os.path.exists(cluster_file)
