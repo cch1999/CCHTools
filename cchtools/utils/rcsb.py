@@ -2,7 +2,7 @@ import logging
 import os
 import urllib.request as request
 from functools import lru_cache
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import requests
 
@@ -104,7 +104,7 @@ class RcsbPdbClusters:
             return None
         return str(seqclust)
 
-    def get_pdbs_in_cluster(self, cluster_id: str | int, include_alphafold: bool = False) -> List[str]:
+    def get_pdbs_in_cluster(self, cluster_id: Union[str, int], include_alphafold: bool = False) -> List[str]:
         """Get all PDBs in a given cluster"""
         if isinstance(cluster_id, int):
             cluster_id = str(cluster_id)
