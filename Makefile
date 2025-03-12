@@ -11,6 +11,12 @@ run-checks :
 	mypy .
 	CUDA_VISIBLE_DEVICES='' pytest -v --color=yes --doctest-modules tests/ cchtools/
 
+format :
+	isort .
+	black .
+	ruff format .
+	mypy .
+
 .PHONY : build
 build :
 	rm -rf *.egg-info/
