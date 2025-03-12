@@ -6,23 +6,31 @@ from functools import lru_cache
 import requests
 
 class RcsbPdbClusters:
-    def __init__(self, identity=30, cluster_dir=os.path.expanduser('~/.cache/cchtools')):
+    def __init__(self, identity: int = 30, cluster_dir: str = os.path.expanduser('~/.cache/cchtools')):
         """
+        Class for fetching sequence cluster IDs for a given PDB code and chain ID
+        using RCSB mmseq2/blastclust predefined clusters.
+
         Clusters info at https://www.rcsb.org/docs/programmatic-access/file-download-services
+
+        Args:
+            identity (int): Identity threshold for clustering
+            cluster_dir (str): Directory to store cluster files (default: ~/.cache/cchtools)
         """
         self.cluster_dir = cluster_dir
         self.identity = identity
         self.clusters = {}
         self._fetch_cluster_file()
 
-    def _download_cluster_sets(self, cluster_file_path):
+    def _download_cluster_sets(self, cluster_file_path: str):
+        """ Download cluster file from RCSB """
         os.makedirs(os.path.dirname(cluster_file_path), exist_ok=True)
 
         # Note that the files changes frequently as do the ordering of cluster within
         request.urlretrieve(f'https://cdn.rcsb.org/resources/sequence/clusters/clusters-by-entity-{self.identity}.txt', cluster_file_path)
 
     def _fetch_cluster_file(self):
-        """ load cluster file if found else download and load """
+        """Load cluster file if found else download and load"""
 
         cluster_file_path = os.path.join(self.cluster_dir, f"pdb_clusters_{self.identity}.out")
         logging.info(f"cluster file path: {cluster_file_path}")
@@ -41,8 +49,17 @@ class RcsbPdbClusters:
     def get_seqclust(self, pdb_code: str,
                      entity_id : str = None,
                      chain_id : str = None,
-                     check_obsolete : bool = True):
-        """ Get sequence cluster ID for a pdb_code chain using RCSB mmseq2/blastclust predefined clusters """
+                     check_obsolete : bool = True) -> int:
+        """ Get sequence cluster ID for a pdb_code chain using RCSB mmseq2/blastclust predefined clusters
+
+        When `check_obsolete` is True, the function will check if the PDB code is obsolete and if so, will return the cluster ID for the superceding PDB code.
+        
+        Args:
+            pdb_code (str): PDB code
+            entity_id (str): Entity ID
+            chain_id (str): Chain ID
+            check_obsolete (bool): Check if PDB code is obsolete
+        """
         
         if entity_id and chain_id:
           raise Exception("Only define one of either `chain_id` or `entity_id`") 
