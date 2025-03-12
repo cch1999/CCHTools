@@ -5,6 +5,8 @@ from functools import lru_cache
 
 import requests
 
+logger = logging.getLogger(__name__)
+
 class RcsbPdbClusters:
     def __init__(self, identity: int = 30, cluster_dir: str = os.path.expanduser('~/.cache/cchtools')):
         """
@@ -67,13 +69,11 @@ class RcsbPdbClusters:
         # Fetch entity_id if only given chain id
         if chain_id:
           entity_id = match_pdb_chain_to_entity(pdb_code, chain_id)
-        if entity_id == None:
+        if entity_id is None:
           logging.info(f"unable to match to entity_id for {pdb_code}_{chain_id}")
           return None
-        if type(entity_id) == int:
-          entity_id = str(entity_id)
 
-        query_str = f"{pdb_code.upper()}_{entity_id.upper()}"  # e.g. 1ATP_I
+        query_str = f"{pdb_code.upper()}_{str(entity_id).upper()}"  # e.g. 1ATP_I
         seqclust = self.clusters.get(query_str, 'None')
         
         if check_obsolete and seqclust == 'None':
@@ -100,8 +100,8 @@ def pdb_check_obsolete(pdb_code):
 
     try:
         r = requests.get(f'https://www.ebi.ac.uk/pdbe/api/pdb/entry/status/{pdb_code}').json()
-    except:
-        logger.info(f"Could not check obsolete status of {pdb_code}")
+    except Exception as e:
+        logger.info(f"Could not check obsolete status of {pdb_code}: {e}")
         return None
     if r[pdb_code][0]['status_code'] == 'OBS':
         pdb_code = r[pdb_code][0]['superceded_by'][0]
@@ -120,7 +120,8 @@ def get_pdb_entities(pdb_code: str):
     response = requests.get(f'https://www.ebi.ac.uk/pdbe/api/pdb/entry/molecules/{pdb_code}')
     entities = response.json()[pdb_code]
     return entities
-  except:
+  except Exception as e:
+    logging.error(f"Error fetching PDB entities for {pdb_code}: {e}")
     return None
 
 @lru_cache()
