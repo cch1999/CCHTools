@@ -72,3 +72,13 @@ def test_fix_bond_orders_with_ccd(temp_dir, test_ccd_code):
     fixed_mol = fix_bond_orders_with_ccd(mol, test_ccd_code, temp_dir)
     assert fixed_mol is not None
     assert isinstance(fixed_mol, Chem.Mol)
+
+    # set all bonds to unknown
+    for bond in fixed_mol.GetBonds():
+        bond.SetBondType(Chem.BondType.UNSPECIFIED)
+
+    fixed_mol = fix_bond_orders_with_ccd(fixed_mol, test_ccd_code, temp_dir)
+
+    assert fixed_mol is not None
+    assert isinstance(fixed_mol, Chem.Mol)
+
