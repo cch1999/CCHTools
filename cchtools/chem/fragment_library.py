@@ -185,9 +185,17 @@ class FragmentLibrary:
         Return a list of (fragment_smiles, atom_map) pairs found in `mol`.
 
         If `return_atom_maps` is False, the atom_map tuple is empty.
+
+        Returns:
+            List[Tuple[str, Chem.Mol, Chem.Mol, Sequence[int]]]:
+                A list of tuples containing:
+                - fragment_smiles: The SMILES representation of the fragment
+                - remaining_mol: The remaining molecule after removing the fragment
+                - fragment_mol: The fragment molecule
+                - atom_map: A tuple of atom indices in the fragment that match the atoms in the query molecule
         """
         m = _to_mol(mol)
-        hits: List[Tuple[str, Chem.Mol, Sequence[int]]] = []
+        hits: List[Tuple[str, Chem.Mol, Chem.Mol, Sequence[int]]] = []
         for frag_smi, frag_mol in zip(self._smiles, self._mols):
             if m.HasSubstructMatch(frag_mol):
                 amap = m.GetSubstructMatch(frag_mol) if return_atom_maps else ()
