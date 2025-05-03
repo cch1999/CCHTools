@@ -25,6 +25,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem, DataStructs
 from rdkit.Chem.MolStandardize import rdMolStandardize as rdms
 from rdkit.Chem.SaltRemover import SaltRemover
+from rdkit.Chem.rdmolops import ReplaceSidechains
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +75,9 @@ def standardise(mol: Chem.Mol) -> Chem.Mol:
 
 def _canonical_smiles(mol: Chem.Mol) -> str:
     return Chem.MolToSmiles(mol, isomericSmiles=True)
+
+
+
 
 @dataclass
 class FragmentLibrary:
@@ -173,16 +177,36 @@ class FragmentLibrary:
         If `return_atom_maps` is False, the atom_map tuple is empty.
         """
         m = _to_mol(mol)
-        hits: List[Tuple[str, Sequence[int]]] = []
-        for frag, fmol in zip(self._smiles, self._mols):
-            if m.HasSubstructMatch(fmol):
-                amap = m.GetSubstructMatch(fmol) if return_atom_maps else ()
-                hits.append((frag, amap))
+        hits: List[Tuple[str, Chem.Mol, Sequence[int]]] = []
+        for frag_smi, frag_mol in zip(self._smiles, self._mols):
+            if m.HasSubstructMatch(frag_mol):
+                amap = m.GetSubstructMatch(frag_mol) if return_atom_maps else ()
+                # remove the matching fragment from the query, keeping its original 3D coordinates
+                remaining = Chem.DeleteSubstructs(m, frag_mol)
+                # keep the matching fragment
+                # extract the fragment substructure using ReplaceSidechains
+                frag = ReplaceSidechains(m, frag_mol)
+
+            
+                hits.append((frag_smi, remaining, frag, amap))
         return hits
 
     def contains_substructure(self, mol: MolLike) -> bool:
         """Boolean convenience wrapper around `substructure_matches`."""
         return bool(self.substructure_matches(mol))
+    
+
+    def get_similar(self, query_frag: MolLike, threshold: float = 0.5) -> List[Chem.Mol]:
+        """
+        Return a list of fragments from this library that are similar to `query_frag`.
+        """
+        query = _to_mol(query_frag)
+        query_fp = AllChem.GetMorganFingerprintAsBitVect(query, radius=2, nBits=2048)
+        hits = []
+        for frag_smi, frag_mol, frag_fp in zip(self._smiles, self._mols, self._fps):
+            if DataStructs.TanimotoSimilarity(frag_fp, query_fp) >= threshold:
+                hits.append(frag_mol)
+        return hits
 
     # ---------------------- vectoriser ----------------------
 
