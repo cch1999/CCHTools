@@ -22,7 +22,8 @@ dependencies = [
   "rdkit",
   "datamol",
   "pdbeccdutils",
-  "requests"
+  "requests",
+  "numpy>=1.25.0,<2"
 ]
 license = {file = "LICENSE"}
 
