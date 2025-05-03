@@ -268,6 +268,12 @@ class FragmentLibrary:
         }
         pathlib.Path(path).write_text(json.dumps(meta, indent=2))
 
+    def to_sdf(self, path: Union[str, pathlib.Path]) -> None:
+        writer = Chem.SDWriter(str(path))
+        for mol in self._mols:
+            writer.write(mol)
+        writer.close()
+
     # ---------------------- pretty ----------------------
 
     def __repr__(self) -> str:  # noqa: D401
