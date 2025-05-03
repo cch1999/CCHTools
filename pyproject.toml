@@ -23,7 +23,7 @@ dependencies = [
   "datamol",
   "pdbeccdutils",
   "requests",
-  "numpy>=1.25.0,<2"
+  "numpy>=1.24.0,<2"
 ]
 license = {file = "LICENSE"}
 
