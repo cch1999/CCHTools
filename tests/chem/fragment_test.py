@@ -1,7 +1,15 @@
-import pytest
 import json
+
+import pytest
 from rdkit import Chem
-from cchtools.chem.fragment_library import FragmentLibrary, _to_mol, MiniFragsLib, PoisedFragsLib
+
+from cchtools.chem.fragment_library import (
+    FragmentLibrary,
+    MiniFragsLib,
+    PoisedFragsLib,
+    _to_mol,
+)
+
 
 def test_to_mol_accepts_smiles_and_mol_and_errors_on_invalid():
     # valid SMILES string
@@ -13,6 +21,7 @@ def test_to_mol_accepts_smiles_and_mol_and_errors_on_invalid():
     # invalid SMILES raises
     with pytest.raises(ValueError):
         _to_mol("not_a_smiles")
+
 
 def test_add_and_contains_and_len():
     lib = FragmentLibrary()
@@ -26,6 +35,7 @@ def test_add_and_contains_and_len():
     lib.add("OCC")
     assert len(lib) == 1
 
+
 def test_from_iterable_and_iter_and_smiles_property():
     frags = ["CC", "CO", "N"]
     lib = FragmentLibrary.from_iterable(frags)
@@ -38,6 +48,7 @@ def test_from_iterable_and_iter_and_smiles_property():
     for mol, smi in zip(mols, smiles_list):
         assert isinstance(mol, Chem.Mol)
         assert Chem.MolToSmiles(mol, isomericSmiles=True) == smi
+
 
 def test_substructure_matches_and_contains_substructure():
     lib = FragmentLibrary.from_iterable(["CC", "CO"])
@@ -55,6 +66,7 @@ def test_substructure_matches_and_contains_substructure():
     assert lib.contains_substructure("CCO") is True
     assert lib.contains_substructure("NNN") is False
 
+
 def test_get_similar_with_thresholds():
     lib = FragmentLibrary.from_iterable(["CCO", "CCC"])
     # threshold=1.0 should only return exact same fragment
@@ -66,6 +78,7 @@ def test_get_similar_with_thresholds():
     sims0_smiles = set(Chem.MolToSmiles(m, isomericSmiles=True) for m in sims0)
     assert sims0_smiles == {"CCO", "CCC"}
 
+
 def test_featurise_binary_and_count():
     lib = FragmentLibrary.from_iterable(["CC", "CO"])
     # binary mode
@@ -74,6 +87,7 @@ def test_featurise_binary_and_count():
     # count mode: "CCCC" has three CC substructures, zero CO
     v_cnt = lib.featurise("CCCC", mode="count")
     assert list(v_cnt) == [3, 0]
+
 
 def test_set_operations_and_repr():
     libA = FragmentLibrary.from_iterable(["CC", "CO"])
@@ -86,6 +100,7 @@ def test_set_operations_and_repr():
     assert set(inter.smiles) == {"CO"}
     diff = libA.difference(libB)
     assert set(diff.smiles) == {"CC"}
+
 
 def test_to_smiles_and_to_json(tmp_path):
     lib = FragmentLibrary.from_iterable(["CC", "CO"])
@@ -101,6 +116,7 @@ def test_to_smiles_and_to_json(tmp_path):
     assert data["n_fragments"] == len(lib)
     assert data["canonical_smiles"] == lib.smiles
 
+
 def test_from_file_csv_and_errors(tmp_path):
     # valid CSV with duplicates
     csv_path = tmp_path / "data.csv"
@@ -114,6 +130,7 @@ def test_from_file_csv_and_errors(tmp_path):
     bad_csv.write_text("a,b\n1,2")
     with pytest.raises(ValueError):
         FragmentLibrary.from_file(bad_csv)
+
 
 def test_minifrag_library():
     lib = MiniFragsLib()

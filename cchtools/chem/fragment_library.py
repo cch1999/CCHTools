@@ -14,8 +14,8 @@ Core features
 
 from __future__ import annotations
 
-import logging
 import json
+import logging
 import pathlib
 from dataclasses import dataclass, field
 from typing import Iterable, List, Sequence, Tuple, Union
@@ -24,15 +24,22 @@ import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem, DataStructs
 from rdkit.Chem.MolStandardize import rdMolStandardize as rdms
-from rdkit.Chem.SaltRemover import SaltRemover
 from rdkit.Chem.rdmolops import ReplaceSidechains
+from rdkit.Chem.SaltRemover import SaltRemover
 
 logger = logging.getLogger(__name__)
 
 MolLike = Union[str, Chem.Mol]  # SMILES | Mol
 
-MINIFRAGS_PATH = pathlib.Path(__file__).parent.parent / "data" / "Enamine_MiniFrag_Library_80cmpds_20250123.sdf"
-POISED_FRAGS_PATH = pathlib.Path(__file__).parent.parent / "data" / "Enamine_DSi-Poised_Library_plated_860cmpds_20250309.sdf"
+MINIFRAGS_PATH = (
+    pathlib.Path(__file__).parent.parent / "data" / "Enamine_MiniFrag_Library_80cmpds_20250123.sdf"
+)
+POISED_FRAGS_PATH = (
+    pathlib.Path(__file__).parent.parent
+    / "data"
+    / "Enamine_DSi-Poised_Library_plated_860cmpds_20250309.sdf"
+)
+
 
 def _to_mol(obj: MolLike) -> Chem.Mol:
     if isinstance(obj, Chem.Mol):
@@ -41,6 +48,7 @@ def _to_mol(obj: MolLike) -> Chem.Mol:
     if m is None:
         raise ValueError(f"Could not parse SMILES: {obj!r}")
     return m
+
 
 def standardise(mol: Chem.Mol) -> Chem.Mol:
     """
@@ -62,26 +70,26 @@ def standardise(mol: Chem.Mol) -> Chem.Mol:
     can = Chem.MolToSmiles(clean_mol, isomericSmiles=True)
 
     # 5. Check if molecule has duplicate atoms
-    if '.' in can:
-        split = can.split('.')
+    if "." in can:
+        split = can.split(".")
         if split[0] == split[1]:
             logger.warning(f"Duplicate fragment: {can}. Returning first half.")
             can = split[0]
         else:
             logger.warning(f"Duplicate fragment: {can}. Not returning anything.")
             return None
-    
+
     return Chem.MolFromSmiles(can)
+
 
 def _canonical_smiles(mol: Chem.Mol) -> str:
     return Chem.MolToSmiles(mol, isomericSmiles=True)
 
 
-
-
 @dataclass
 class FragmentLibrary:
     """Container around a *set* of molecular fragments."""
+
     _mols: List[Chem.Mol] = field(default_factory=list, repr=False)
     _smiles: List[str] = field(default_factory=list, repr=False)
     _fps: List[DataStructs.cDataStructs.ExplicitBitVect] = field(default_factory=list, repr=False)
@@ -96,7 +104,9 @@ class FragmentLibrary:
         return lib
 
     @classmethod
-    def from_file(cls, path: Union[str, pathlib.Path], smiles_column: str | None = None) -> "FragmentLibrary":
+    def from_file(
+        cls, path: Union[str, pathlib.Path], smiles_column: str | None = None
+    ) -> "FragmentLibrary":
         path = pathlib.Path(path)
         if path.suffix.lower() == ".sdf":
             suppl = Chem.SDMolSupplier(str(path), removeHs=True)
@@ -132,17 +142,17 @@ class FragmentLibrary:
     def __contains__(self, mol: MolLike) -> bool:
         smi = _canonical_smiles(_to_mol(mol))
         return smi in self._smiles
-    
+
     # ---------------------- properties ----------------------
-    
+
     @property
     def mols(self) -> List[Chem.Mol]:
         return self._mols
-    
+
     @property
     def smiles(self) -> List[str]:
         return self._smiles
-    
+
     @property
     def fps(self) -> List[DataStructs.cDataStructs.ExplicitBitVect]:
         return self._fps
@@ -187,14 +197,12 @@ class FragmentLibrary:
                 # extract the fragment substructure using ReplaceSidechains
                 frag = ReplaceSidechains(m, frag_mol)
 
-            
                 hits.append((frag_smi, remaining, frag, amap))
         return hits
 
     def contains_substructure(self, mol: MolLike) -> bool:
         """Boolean convenience wrapper around `substructure_matches`."""
         return bool(self.substructure_matches(mol))
-    
 
     def get_similar(self, query_frag: MolLike, threshold: float = 0.5) -> List[Chem.Mol]:
         """
@@ -257,6 +265,7 @@ class FragmentLibrary:
     def __repr__(self) -> str:  # noqa: D401
         return f"<FragmentLibrary n={len(self)}>"
 
+
 class MiniFragsLib(FragmentLibrary):
     def __init__(self, path: Union[str, pathlib.Path] = MINIFRAGS_PATH):
         super().__init__()
@@ -265,6 +274,7 @@ class MiniFragsLib(FragmentLibrary):
 
     def __repr__(self) -> str:
         return f"<MiniFragsLibrary n={len(self)}>"
+
 
 class PoisedFragsLib(FragmentLibrary):
     def __init__(self, path: Union[str, pathlib.Path] = POISED_FRAGS_PATH):
@@ -275,16 +285,17 @@ class PoisedFragsLib(FragmentLibrary):
     def __repr__(self) -> str:
         return f"<PoisedFragsLibrary n={len(self)}>"
 
+
 if __name__ == "__main__":
     # Two tiny benzamide fragments as a demo
     frags = ["c1ccccc1C(=O)N", "c1ccncc1"]
     lib = FragmentLibrary.from_iterable(frags)
 
-    query = "c1ccc(cc1)C(=O)NC"     # acetanilide
-    print(query in lib)             # False (exact)
+    query = "c1ccc(cc1)C(=O)NC"  # acetanilide
+    print(query in lib)  # False (exact)
     print(lib.contains_substructure(query))  # True
-    print(lib.substructure_matches(query))   # [('c1ccccc1C(=O)N', tuple())]
+    print(lib.substructure_matches(query))  # [('c1ccccc1C(=O)N', tuple())]
 
-    print(lib.featurise(query))     # [1 0]
+    print(lib.featurise(query))  # [1 0]
 
     print(lib)
