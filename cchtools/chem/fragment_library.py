@@ -180,7 +180,7 @@ class FragmentLibrary:
         self,
         mol: MolLike,
         return_atom_maps: bool = False,
-    ) -> List[Tuple[str, Sequence[int]]]:
+    ) -> List[Tuple[str, Chem.Mol, Chem.Mol, Sequence[int]]]:
         """
         Return a list of (fragment_smiles, atom_map) pairs found in `mol`.
 
