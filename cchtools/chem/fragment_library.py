@@ -22,14 +22,14 @@ import pandas as pd
 from dataclasses import dataclass, field
 from typing import Iterable, List, Optional, Sequence, Tuple, Union, Dict, Any
 
-from cifutils.tools.rdkit import preserve_annotations
-
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem, DataStructs
 from rdkit.Chem.MolStandardize import rdMolStandardize as rdms
 from rdkit.Chem.rdmolops import ReplaceSidechains
 from rdkit.Chem.SaltRemover import SaltRemover
+
+from cchtools.chem.utils import preserve_properties
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def _to_mol(obj: MolLike) -> Chem.Mol:
         raise ValueError(f"Could not parse SMILES: {obj!r}")
     return m
 
-@preserve_annotations
+@preserve_properties
 def standardise(mol: Chem.Mol) -> Optional[Chem.Mol]:
     """
     Standardise a molecule by:
@@ -148,15 +148,34 @@ class FragmentLibrary:
         path = pathlib.Path(path)
         if path.suffix.lower() == ".sdf":
             suppl = Chem.SDMolSupplier(str(path), removeHs=True)
-            return cls.from_iterable([m for m in suppl if m])
+            # Use from_molecules with extract_props=True to capture all properties
+            return cls.from_molecules([m for m in suppl if m], extract_props=True)
         # assume CSV/TSV
         if smiles_column is None:
             raise ValueError("CSV/TSV input requires 'smiles_column' kwarg.")
-        lines = path.read_text().splitlines()
-        header = lines[0].split(",")
-        idx = header.index(smiles_column)
-        return cls.from_iterable(line.split(",")[idx] for line in lines[1:])
-        
+            
+        # For CSV files, try to read with pandas for better property handling
+        try:
+            df = pd.read_csv(path)
+            mols = []
+            for _, row in df.iterrows():
+                smiles = row[smiles_column]
+                mol = Chem.MolFromSmiles(smiles)
+                if mol:
+                    # Add all other columns as properties
+                    for col in df.columns:
+                        if col != smiles_column and not pd.isna(row[col]):
+                            mol.SetProp(col, str(row[col]))
+                    mols.append(mol)
+            return cls.from_molecules(mols, extract_props=True)
+        except Exception as e:
+            logger.warning(f"Could not read CSV with pandas: {e}. Falling back to basic parser.")
+            # Fallback to basic parser
+            lines = path.read_text().splitlines()
+            header = lines[0].split(",")
+            idx = header.index(smiles_column)
+            return cls.from_iterable(line.split(",")[idx] for line in lines[1:])
+
     @classmethod
     def from_molecules(cls, mols: Iterable[Chem.Mol], extract_props: bool = False) -> "FragmentLibrary":
         """
@@ -202,9 +221,13 @@ class FragmentLibrary:
         self._mols.clear()
         self._smiles.clear()
         self._fps.clear()
+        self._metadata.clear()  # Clear metadata too
         self._mols.extend(lib._mols)
         self._smiles.extend(lib._smiles)
         self._fps.extend(lib._fps)
+        # Copy metadata from loaded library
+        for key, value in lib._metadata.items():
+            self._metadata[key] = value
 
     # ---------------------- dunder bits ----------------------
 
@@ -270,9 +293,17 @@ class FragmentLibrary:
             self._mols.append(m)
             self._smiles.append(smi)
             self._fps.append(AllChem.GetMorganFingerprintAsBitVect(m, radius=2, nBits=2048))
-            self._metadata[smi] = {}
+            
+            # Extract properties and store in metadata
+            props = {}
             for prop_name in m.GetPropNames():
-                self._metadata[smi][prop_name] = m.GetProp(prop_name)
+                props[prop_name] = m.GetProp(prop_name)
+                
+            # Store properties in a consistent format
+            if props:
+                if "properties" not in self._metadata:
+                    self._metadata["properties"] = {}
+                self._metadata["properties"][smi] = props
             
         except Exception as e:
             logger.error(f"Error adding molecule to library: {e}")
@@ -510,9 +541,40 @@ class FragmentLibrary:
             
         return lib
     
-    def to_df(self) -> pd.DataFrame:
-        """Convert the fragment library to a pandas DataFrame."""
-        return pd.DataFrame(self._metadata)
+    def to_df(self, add_properties: bool = True, add_fingerprints: bool = False) -> pd.DataFrame:
+        """
+        Convert the fragment library to a pandas DataFrame.
+        
+        Returns:
+            A DataFrame with SMILES as index and properties as columns
+        """
+        # Create base DataFrame with SMILES
+        df = pd.DataFrame({"SMILES": self._smiles})
+        df.set_index("SMILES", inplace=True)
+
+        # Add molecules
+        df["mol"] = self._mols
+        
+        # Add properties if available
+        if "properties" in self._metadata and add_properties:
+            properties = self._metadata["properties"]
+            
+            # Find all property keys across all molecules
+            all_props = set()
+            for props_dict in properties.values():
+                all_props.update(props_dict.keys())
+                
+            # Fill in property columns
+            for smi in self._smiles:
+                if smi in properties:
+                    for prop in all_props:
+                        if prop in properties[smi]:
+                            df.loc[smi, prop] = properties[smi][prop]
+
+        if add_fingerprints:
+            df["fingerprint"] = self._fps
+        
+        return df
 
     # ---------------------- pretty ----------------------
 
