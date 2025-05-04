@@ -1,13 +1,18 @@
 import json
+import pickle
+import os
 
 import pytest
+import numpy as np
 from rdkit import Chem
+from rdkit.Chem import rdMolDescriptors
 
 from cchtools.chem.fragment_library import (
     FragmentLibrary,
     MiniFragsLib,
     PoisedFragsLib,
     _to_mol,
+    standardise,
 )
 
 
@@ -21,6 +26,28 @@ def test_to_mol_accepts_smiles_and_mol_and_errors_on_invalid():
     # invalid SMILES raises
     with pytest.raises(ValueError):
         _to_mol("not_a_smiles")
+
+
+def test_standardise_handles_edge_cases():
+    # Test None input
+    assert standardise(None) is None
+    
+    # Test valid molecule
+    mol = Chem.MolFromSmiles("CCO")
+    result = standardise(mol)
+    assert isinstance(result, Chem.Mol)
+    
+    # Test molecule with salt
+    salt_mol = Chem.MolFromSmiles("CCO.Cl")
+    result = standardise(salt_mol)
+    assert isinstance(result, Chem.Mol)
+    assert Chem.MolToSmiles(result) == "CCO"
+    
+    # Test duplicate fragments
+    dup_mol = Chem.MolFromSmiles("CCO.CCO")
+    result = standardise(dup_mol)
+    assert isinstance(result, Chem.Mol)
+    assert Chem.MolToSmiles(result) == "CCO"
 
 
 def test_add_and_contains_and_len():
@@ -48,6 +75,33 @@ def test_from_iterable_and_iter_and_smiles_property():
     for mol, smi in zip(mols, smiles_list):
         assert isinstance(mol, Chem.Mol)
         assert Chem.MolToSmiles(mol, isomericSmiles=True) == smi
+
+
+def test_from_molecules():
+    # Create some RDKit molecules with properties
+    mols = []
+    for smiles, name in [("CCO", "ethanol"), ("CCC", "propane")]:
+        mol = Chem.MolFromSmiles(smiles)
+        # Set properties as Chem.Props._ prefix is stripped during serialization
+        mol.SetProp("Name", name)  # Changed from _Name to Name
+        mol.SetProp("MW", str(round(rdMolDescriptors.CalcExactMolWt(mol), 2)))
+        mols.append(mol)
+        
+    # Test without extracting properties
+    lib = FragmentLibrary.from_molecules(mols, extract_props=False)
+    assert len(lib) == 2
+    assert set(lib.smiles) == {"CCO", "CCC"}
+    assert not lib.metadata
+    
+    # Test with extracting properties
+    lib_with_props = FragmentLibrary.from_molecules(mols, extract_props=True)
+    assert len(lib_with_props) == 2
+    assert "properties" in lib_with_props.metadata
+    assert len(lib_with_props.metadata["properties"]) == 2
+    
+    # Check properties were extracted correctly
+    ethanol_smi = Chem.MolToSmiles(Chem.MolFromSmiles("CCO"), isomericSmiles=True)
+    assert lib_with_props.metadata["properties"][ethanol_smi]["Name"] == "ethanol"  # Changed from _Name to Name
 
 
 def test_substructure_matches_and_contains_substructure():
@@ -79,6 +133,27 @@ def test_get_similar_with_thresholds():
     assert sims0_smiles == {"CCO", "CCC"}
 
 
+def test_get_similar_with_scores():
+    lib = FragmentLibrary.from_iterable(["CCO", "CCC", "c1ccccc1"])
+    
+    # Get similar fragments with scores
+    sims = lib.get_similar_with_scores("CCO", threshold=0.0)
+    
+    # Check results format
+    assert len(sims) == 3
+    assert all(isinstance(mol, Chem.Mol) for mol, _ in sims)
+    assert all(isinstance(score, float) for _, score in sims)
+    
+    # Check sorting (should be descending by score)
+    scores = [score for _, score in sims]
+    assert sorted(scores, reverse=True) == scores
+    
+    # The query itself should have highest similarity (1.0)
+    top_mol, top_score = sims[0]
+    assert Chem.MolToSmiles(top_mol) == "CCO"
+    assert top_score == 1.0
+
+
 def test_featurise_binary_and_count():
     lib = FragmentLibrary.from_iterable(["CC", "CO"])
     # binary mode
@@ -87,6 +162,10 @@ def test_featurise_binary_and_count():
     # count mode: "CCCC" has three CC substructures, zero CO
     v_cnt = lib.featurise("CCCC", mode="count")
     assert list(v_cnt) == [3, 0]
+    
+    # Test invalid mode
+    with pytest.raises(ValueError):
+        lib.featurise("CCO", mode="invalid")
 
 
 def test_set_operations_and_repr():
@@ -102,6 +181,17 @@ def test_set_operations_and_repr():
     assert set(diff.smiles) == {"CC"}
 
 
+def test_operator_add():
+    libA = FragmentLibrary.from_iterable(["CC", "CO"])
+    libB = FragmentLibrary.from_iterable(["CO", "CCN"])
+    
+    # Test addition operator
+    combined = libA + libB
+    assert isinstance(combined, FragmentLibrary)
+    assert len(combined) == 3
+    assert set(combined.smiles) == {"CC", "CO", "CCN"}
+
+
 def test_to_smiles_and_to_json(tmp_path):
     lib = FragmentLibrary.from_iterable(["CC", "CO"])
     # to_smiles writes one-per-line
@@ -115,6 +205,40 @@ def test_to_smiles_and_to_json(tmp_path):
     data = json.loads(json_file.read_text())
     assert data["n_fragments"] == len(lib)
     assert data["canonical_smiles"] == lib.smiles
+    
+    # Test with custom metadata
+    lib._metadata["source"] = "test"
+    lib.to_json(json_file)
+    data = json.loads(json_file.read_text())
+    assert "metadata" in data
+    assert data["metadata"]["source"] == "test"
+
+
+def test_to_pickle_and_from_pickle(tmp_path):
+    # Create a library with some molecules
+    lib = FragmentLibrary.from_iterable(["CC", "CO", "CCO"])
+    lib._metadata["source"] = "test pickle"
+    
+    # Save to pickle
+    pickle_path = tmp_path / "frags.pkl"
+    lib.to_pickle(pickle_path)
+    assert os.path.exists(pickle_path)
+    
+    # Load from pickle
+    loaded_lib = FragmentLibrary.from_pickle(pickle_path)
+    
+    # Check if loaded library has the same content
+    assert len(loaded_lib) == len(lib)
+    assert loaded_lib.smiles == lib.smiles
+    assert loaded_lib.metadata == lib.metadata
+    
+    # Test error handling for invalid pickle
+    invalid_path = tmp_path / "invalid.pkl"
+    with open(invalid_path, 'wb') as f:
+        pickle.dump("not a library", f)
+    
+    with pytest.raises(ValueError):
+        FragmentLibrary.from_pickle(invalid_path)
 
 
 def test_from_file_csv_and_errors(tmp_path):
@@ -130,6 +254,18 @@ def test_from_file_csv_and_errors(tmp_path):
     bad_csv.write_text("a,b\n1,2")
     with pytest.raises(ValueError):
         FragmentLibrary.from_file(bad_csv)
+
+
+def test_error_handling():
+    lib = FragmentLibrary()
+    
+    # Invalid SMILES should be handled gracefully
+    lib.add("not_a_smiles")
+    assert len(lib) == 0
+    
+    # Adding None should be handled
+    lib.add(None)
+    assert len(lib) == 0
 
 
 def test_minifrag_library():
