@@ -18,8 +18,11 @@ import json
 import logging
 import pathlib
 import pickle
+import pandas as pd
 from dataclasses import dataclass, field
 from typing import Iterable, List, Optional, Sequence, Tuple, Union, Dict, Any
+
+from cifutils.tools.rdkit import preserve_annotations
 
 import numpy as np
 from rdkit import Chem
@@ -50,7 +53,7 @@ def _to_mol(obj: MolLike) -> Chem.Mol:
         raise ValueError(f"Could not parse SMILES: {obj!r}")
     return m
 
-
+@preserve_annotations
 def standardise(mol: Chem.Mol) -> Optional[Chem.Mol]:
     """
     Standardise a molecule by:
@@ -267,6 +270,10 @@ class FragmentLibrary:
             self._mols.append(m)
             self._smiles.append(smi)
             self._fps.append(AllChem.GetMorganFingerprintAsBitVect(m, radius=2, nBits=2048))
+            self._metadata[smi] = {}
+            for prop_name in m.GetPropNames():
+                self._metadata[smi][prop_name] = m.GetProp(prop_name)
+            
         except Exception as e:
             logger.error(f"Error adding molecule to library: {e}")
 
@@ -502,6 +509,10 @@ class FragmentLibrary:
             raise ValueError(f"Loaded object is not a FragmentLibrary: {type(lib)}")
             
         return lib
+    
+    def to_df(self) -> pd.DataFrame:
+        """Convert the fragment library to a pandas DataFrame."""
+        return pd.DataFrame(self._metadata)
 
     # ---------------------- pretty ----------------------
 
