@@ -1,6 +1,43 @@
+import functools
+import io
+import logging
+from contextlib import redirect_stderr
+from rdkit import RDLogger
+
 from typing import Callable
 from rdkit.Chem import Mol
 from functools import wraps
+
+logger = logging.getLogger(__name__)
+
+
+def silence_rdkit(func):
+    """
+    Decorator: run *func* while RDKit’s Python-level log messages and
+    C++ stderr warnings are suppressed.
+
+    Example
+    -------
+    >>> @silence_rdkit
+    ... def make_mol(smiles):
+    ...     from rdkit import Chem
+    ...     return Chem.MolFromSmiles(smiles)
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # 1. Quiet RDKit’s Python logger
+        logger = RDLogger.logger()
+        RDLogger.DisableLog('rdApp.*')             # mute everything
+
+        # 2. Catch C++ warnings that appear on stderr
+        fake_err = io.StringIO()
+        with redirect_stderr(fake_err):
+            try:
+                return func(*args, **kwargs)
+            finally:
+                # 3. Restore the logging state whatever happens
+                RDLogger.EnableLog('rdApp.*')
+    return wrapper
 
 
 def preserve_properties(func: Callable[[Mol, ...], Mol]) -> Callable[[Mol, ...], Mol]:
