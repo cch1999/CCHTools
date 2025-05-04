@@ -29,8 +29,6 @@ from rdkit.Chem.MolStandardize import rdMolStandardize as rdms
 from rdkit.Chem.rdmolops import ReplaceSidechains
 from rdkit.Chem.SaltRemover import SaltRemover
 
-from cchtools.chem.utils import preserve_properties
-
 logger = logging.getLogger(__name__)
 
 MolLike = Union[str, Chem.Mol]  # SMILES | Mol
@@ -53,7 +51,6 @@ def _to_mol(obj: MolLike) -> Chem.Mol:
         raise ValueError(f"Could not parse SMILES: {obj!r}")
     return m
 
-@preserve_properties
 def standardise(mol: Chem.Mol) -> Optional[Chem.Mol]:
     """
     Standardise a molecule by:
@@ -90,8 +87,15 @@ def standardise(mol: Chem.Mol) -> Optional[Chem.Mol]:
             else:
                 logger.warning(f"Duplicate fragment: {can}. Not returning anything.")
                 return None
+                
+        new_mol = Chem.MolFromSmiles(can)
+        
+        # Copy properties from original molecule if possible
+        if hasattr(mol, "GetPropNames"):
+            for prop_name in mol.GetPropNames():
+                new_mol.SetProp(prop_name, mol.GetProp(prop_name))
 
-        return Chem.MolFromSmiles(can)
+        return new_mol
     except Exception as e:
         logger.error(f"Error standardizing molecule: {e}")
         return None
@@ -189,6 +193,10 @@ class FragmentLibrary:
             A new FragmentLibrary instance
         """
         lib = cls()
+        
+        # Store the extract_props flag in the library's metadata
+        lib._extract_props = extract_props
+        
         for mol in mols:
             if mol is None:
                 continue
@@ -294,16 +302,19 @@ class FragmentLibrary:
             self._smiles.append(smi)
             self._fps.append(AllChem.GetMorganFingerprintAsBitVect(m, radius=2, nBits=2048))
             
-            # Extract properties and store in metadata
-            props = {}
-            for prop_name in m.GetPropNames():
-                props[prop_name] = m.GetProp(prop_name)
-                
-            # Store properties in a consistent format
-            if props:
-                if "properties" not in self._metadata:
-                    self._metadata["properties"] = {}
-                self._metadata["properties"][smi] = props
+            # Only save properties if explicitly requested with extract_props=True
+            # Check if we've been created by from_molecules with extract_props=True
+            if hasattr(self, "_extract_props") and self._extract_props:
+                # Extract properties and store in metadata
+                props = {}
+                for prop_name in m.GetPropNames():
+                    props[prop_name] = m.GetProp(prop_name)
+                    
+                # Store properties in a consistent format
+                if props:
+                    if "properties" not in self._metadata:
+                        self._metadata["properties"] = {}
+                    self._metadata["properties"][smi] = props
             
         except Exception as e:
             logger.error(f"Error adding molecule to library: {e}")
